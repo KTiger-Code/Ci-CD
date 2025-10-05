@@ -17,17 +17,64 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Lint YAML Files (Check Syntax)
-      uses: nevse/yaml-lint@v1.2.1
+      uses: ibiqlik/action-yamllint@v3
       with:
-        files: '**.yml'
-        # หรือระบุไฟล์ที่ต้องการ: files: 'docker-compose.yml, k8s/*.yml, .github/workflows/*.yml'
+        file_or_dir: |
+          .github/workflows/ci.yml
+          docker-compose.yml
+          k8s/deployment.yml
+          k8s/service.yml
+        config_file: .yamllint.yml
+        strict: false
+
+    - name: Setup Docker
+      uses: docker/setup-buildx-action@v3
 
     - name: Check Docker Compose Syntax
-      run: docker-compose config
+      run: |
+        echo "Validating Docker Compose configuration..."
+        docker-compose config --quiet
+        echo "Docker Compose validation successful!"
+
+    - name: Setup Kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
 
     - name: Kubernetes Dry-Run Check
       run: |
-        kubectl apply -f k8s/ --dry-run=client -o yaml
+        echo "Validating Kubernetes manifests..."
+        kubectl apply -f k8s/ --dry-run=client --validate=true
+        echo "Kubernetes validation successful!"
+
+    - name: Validate All YAML Files Structure
+      run: |
+        echo "Running additional YAML structure validation..."
+        # Check if all required files exist
+        if [ ! -f "docker-compose.yml" ]; then
+          echo "Error: docker-compose.yml not found"
+          exit 1
+        fi
+        if [ ! -f "k8s/deployment.yml" ]; then
+          echo "Error: k8s/deployment.yml not found"
+          exit 1
+        fi
+        if [ ! -f "k8s/service.yml" ]; then
+          echo "Error: k8s/service.yml not found"
+          exit 1
+        fi
+        echo "All required YAML files are present!"
+        
+        # Validate Docker Compose has required services
+        if ! docker-compose config | grep -q "web:"; then
+          echo "Error: web service not found in docker-compose.yml"
+          exit 1
+        fi
+        if ! docker-compose config | grep -q "db:"; then
+          echo "Error: db service not found in docker-compose.yml"
+          exit 1
+        fi
+        echo "Docker Compose services validation passed!"
 
     - name: Build Application (Example)
       run: echo "Build successful for $(git rev-parse --short HEAD)"
