@@ -33,7 +33,7 @@ jobs:
     - name: Check Docker Compose Syntax
       run: |
         echo "Validating Docker Compose configuration..."
-        docker-compose config --quiet
+        docker compose config --quiet
         echo "Docker Compose validation successful!"
 
     - name: Setup Kubectl
@@ -66,11 +66,11 @@ jobs:
         echo "All required YAML files are present!"
         
         # Validate Docker Compose has required services
-        if ! docker-compose config | grep -q "web:"; then
+        if ! docker compose config | grep -q "web:"; then
           echo "Error: web service not found in docker-compose.yml"
           exit 1
         fi
-        if ! docker-compose config | grep -q "db:"; then
+        if ! docker compose config | grep -q "db:"; then
           echo "Error: db service not found in docker-compose.yml"
           exit 1
         fi
