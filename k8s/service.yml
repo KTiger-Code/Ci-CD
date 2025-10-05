@@ -1,0 +1,16 @@
+# k8s/service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport-service
+spec:
+  # เลือก Pods ที่มี Label ตรงกับ app: web-app และ tier: frontend
+  selector:
+    app: web-app
+    tier: frontend
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      # NodePort จะสุ่มพอร์ตในช่วง 30000-32767
+      nodePort: 30080
