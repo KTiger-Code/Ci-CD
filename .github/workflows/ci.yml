@@ -1,0 +1,36 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci_process:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Lint YAML Files (Check Syntax)
+      uses: nevse/yaml-lint@v1.2.1
+      with:
+        files: '**.yml'
+        # หรือระบุไฟล์ที่ต้องการ: files: 'docker-compose.yml, k8s/*.yml, .github/workflows/*.yml'
+
+    - name: Check Docker Compose Syntax
+      run: docker-compose config
+
+    - name: Kubernetes Dry-Run Check
+      run: |
+        kubectl apply -f k8s/ --dry-run=client -o yaml
+
+    - name: Build Application (Example)
+      run: echo "Build successful for $(git rev-parse --short HEAD)"
+
+    - name: Notify Workflow Finished
+      run: echo "CI/CD Workflow finished successfully."
