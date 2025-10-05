@@ -1,0 +1,26 @@
+# k8s/deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: web-app
+spec:
+  # ต้องการ 2 replicas (อินสแตนซ์)
+  replicas: 2
+  # กำหนดว่าจะเลือก Pod ไหนมาจัดการ
+  selector:
+    matchLabels:
+      app: web-app
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: web-app
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
